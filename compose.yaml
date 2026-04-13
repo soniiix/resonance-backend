@@ -1,8 +1,8 @@
 
 services:
-###> doctrine/doctrine-bundle ###
   database:
     image: postgres:${POSTGRES_VERSION:-16}-alpine
+    container_name: resonance_database
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-app}
       # You should definitely change the password in production
@@ -16,10 +16,31 @@ services:
     volumes:
       - database_data:/var/lib/postgresql/data:rw
       # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
+      # - ./docker/db/data:/var/lib/postgresql/data:rw*
+  app:
+    image: php:8.2-fpm
+    container_name: resonance_api
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    depends_on:
+      database:
+        condition: service_healthy
+    command: >
+      sh -c "apt-get update &&
+             apt-get install -y git unzip libpq-dev &&
+             docker-php-ext-install pdo pdo_pgsql &&
+             php-fpm"
+  nginx:
+    image: nginx:alpine
+    container_name: resonance_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
 
 volumes:
-###> doctrine/doctrine-bundle ###
   database_data:
-###< doctrine/doctrine-bundle ###
