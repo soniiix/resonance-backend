@@ -1,5 +1,6 @@
 api_platform:
-    title: Hello API Platform
+    title: Resonance API
+    description: API for the Resonance project
     version: 1.0.0
     defaults:
         stateless: true
